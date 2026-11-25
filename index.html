@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>canimin ici ❤️</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #1f0919 0%, #0d030a 65%, #050104 100%);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .ui-overlay {
+      position: fixed;
+      bottom: 22px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .lang-badge {
+      background: rgba(255, 77, 109, 0.16);
+      border: 1px solid rgba(255, 143, 163, 0.35);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #ffd6de;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .lang-badge.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .replay-btn {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 214, 222, 0.75);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .replay-btn:hover {
+      background: rgba(255, 77, 109, 0.25);
+      border-color: rgba(255, 117, 143, 0.5);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="heartCanvas"></canvas>
+
+  <div class="ui-overlay">
+    <div id="langBadge" class="lang-badge">Türkçe — Seni Seviyorum</div>
+    <button id="replayBtn" class="replay-btn">↻ Animasyonu Tekrar İzle</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('heartCanvas');
+    const ctx = canvas.getContext('2d');
+    const langBadge = document.getElementById('langBadge');
+    const replayBtn = document.getElementById('replayBtn');
+
+    // Ortadaki ana mesajı buradan özelleştirebilirsin:
+    const CENTER_MAIN_TEXT = "Seni Seviyorum";
+    const CENTER_SUB_TEXT = "Her dilde, her zaman...";
+
+    const phrases = [
+      { lang: "Türkçe", text: "Seni Seviyorum" },
+      { lang: "İngilizce", text: "I Love You" },
+      { lang: "İspanyolca", text: "Te Amo" },
+      { lang: "Fransızca", text: "Je t'aime" },
+      { lang: "İtalyanca", text: "Ti Amo" },
+      { lang: "Almanca", text: "Ich liebe dich" },
+      { lang: "Portekizce", text: "Eu te amo" },
+      { lang: "Rusça", text: "Я тебя люблю" },
+      { lang: "Japonca", text: "愛してる" },
+      { lang: "Korece", text: "사랑해" },
+      { lang: "Çince", text: "我爱你" },
+      { lang: "Arapça", text: "أحبك" },
+      { lang: "Yunanca", text: "Σ' αγαπώ" },
+      { lang: "Hollandaca", text: "Ik hou van jou" },
+      { lang: "İsveççe", text: "Jag älskar dig" },
+      { lang: "Norveççe", text: "Jeg elsker deg" },
+      { lang: "Danca", text: "Jeg elsker dig" },
+      { lang: "Fince", text: "Minä rakastan sinua" },
+      { lang: "Lehçe", text: "Kocham Cię" },
+      { lang: "Çekçe", text: "Miluji tě" },
+      { lang: "Macarca", text: "Szeretlek" },
+      { lang: "Rumence", text: "Te iubesc" },
+      { lang: "Bulgarca", text: "Обичам те" },
+      { lang: "Ukraynaca", text: "Я тебе кохаю" },
+      { lang: "Hırvatça", text: "Volim te" },
+      { lang: "Sırpça", text: "Волим те" },
+      { lang: "Arnavutça", text: "Të dua" },
+      { lang: "Azerbaycanca", text: "Mən səni sevirəm" },
+      { lang: "Kazakça", text: "Мен сені сүйемін" },
+      { lang: "Özbekçe", text: "Men seni sevaman" },
+      { lang: "Kırgızca", text: "Мен сени сүйөм" },
+      { lang: "Türkmence", text: "Men seni söýýärin" },
+      { lang: "Gürcüce", text: "მიყვარხარ" },
+      { lang: "Farsça", text: "دوستت دارم" },
+      { lang: "İbranice", text: "אני אוהב אותך" },
+      { lang: "Hintçe", text: "मैं तुमसे प्यार करता हूँ" },
+      { lang: "Tayca", text: "ฉันรักคุณ" },
+      { lang: "Vietnamca", text: "Anh yêu em" },
+      { lang: "Endonezce", text: "Aku cinta kamu" },
+      { lang: "Malayca", text: "Saya cintakan awak" },
+      { lang: "Filipince", text: "Mahal kita" },
+      { lang: "Svahili", text: "Nakupenda" },
+      { lang: "Zulu", text: "Ngiyakuthanda" },
+      { lang: "Afrikaans", text: "Ek het jou lief" },
+      { lang: "İrlandaca", text: "Taim i' ngra leat" },
+      { lang: "İskoçça", text: "Tha gaol agam ort" },
+      { lang: "Galce", text: "Rwy'n dy garu di" },
+      { lang: "İzlandaca", text: "Ég elska þig" },
+      { lang: "Estonca", text: "Ma armastan sind" },
+      { lang: "Letonca", text: "Es tevi mīlu" },
+      { lang: "Litvanca", text: "Aš tave myliu" },
+      { lang: "Maltaca", text: "Inħobbok" },
+      { lang: "Baskça", text: "Maite zaitut" },
+      { lang: "Katalanca", text: "T'estimo" },
+      { lang: "Galiçyaca", text: "Quérote" },
+      { lang: "Latince", text: "Te amo" },
+      { lang: "Hawaiice", text: "Aloha wau iā ʻoe" },
+      { lang: "Maorice", text: "Aroha ahau ki a koe" },
+      { lang: "Esperanto", text: "Mi amas vin" },
+      { lang: "Slovakça", text: "Ľúbim ťa" },
+      { lang: "Slovence", text: "Ljubim te" },
+      { lang: "Moğolca", text: "Би чамд хайртай" },
+      { lang: "Bengalce", text: "আমি তোমায় ভালোবাসি" },
+      { lang: "Tamilce", text: "நான் உன்னை காதலிக்கிறேன்" },
+      { lang: "Urduca", text: "میں تم سے پیار کرتا ہوں" },
+      { lang: "Boşnakça", text: "Volim te" }
+    ];
+
+    const palette = [
+      "#ff4d6d",
+      "#ff758f",
+      "#ff8fa3",
+      "#ffb3c1",
+      "#ffccd5",
+      "#fff0f3"
+    ];
+
+    let width, height, dpr;
+    let particles = [];
+    let rainHearts = [];
+    let burstHearts = [];
+    let startTime = performance.now();
+    let badgeTimer = null;
+
+    function heartPoint(t) {
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+      return { x, y };
+    }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      computeTargets();
+    }
+
+    function createRainHeart(randomY = false) {
+      const depth = Math.random(); // 0: uzakta/küçük, 1: yakında/büyük
+      return {
+        x: Math.random() * window.innerWidth,
+        y: randomY ? Math.random() * window.innerHeight : -20 - Math.random() * 60,
+        size: 5 + depth * 9,
+        speedY: 0.6 + depth * 1.4,
+        swaySpeed: 0.001 + Math.random() * 0.0015,
+        swayAmp: 0.3 + depth * 0.7,
+        phase: Math.random() * Math.PI * 2,
+        rotation: (Math.random() - 0.5) * 0.5,
+        rotSpeed: (Math.random() - 0.5) * 0.01,
+        alpha: 0.12 + depth * 0.25,
+        color: palette[Math.floor(Math.random() * 4)]
+      };
+    }
+
+    function initParticles() {
+      particles = [];
+      const layers = [
+        { count: 32, scaleFactor: 1.0, offset: 0, alpha: 0.95 },
+        { count: 22, scaleFactor: 0.74, offset: 0.14, alpha: 0.78 },
+        { count: 12, scaleFactor: 0.49, offset: 0.28, alpha: 0.62 }
+      ];
+
+      let idx = 0;
+      layers.forEach((layer, layerIdx) => {
+        for (let i = 0; i < layer.count; i++) {
+          const item = phrases[idx % phrases.length];
+          const t = (i / layer.count) * Math.PI * 2 + layer.offset;
+
+          const angle = Math.random() * Math.PI * 2;
+          const dist = Math.max(window.innerWidth, window.innerHeight) * (0.55 + Math.random() * 0.5);
+
+          particles.push({
+            lang: item.lang,
+            text: item.text,
+            t,
+            layerScale: layer.scaleFactor,
+            layerIdx,
+            baseAlpha: layer.alpha,
+            color: palette[(idx + layerIdx) % palette.length],
+            startX: window.innerWidth / 2 + Math.cos(angle) * dist,
+            startY: window.innerHeight / 2 + Math.sin(angle) * dist,
+            targetX: 0,
+            targetY: 0,
+            x: 0,
+            y: 0,
+            delay: (idx % 18) * 45 + layerIdx * 180,
+            duration: 2400 + Math.random() * 900,
+            floatPhase: Math.random() * Math.PI * 2
+          });
+          idx++;
+        }
+      });
+
+      // Arka planda yağmur gibi yağan kalpler
+      const rainCount = window.innerWidth < 600 ? 38 : 55;
+      rainHearts = Array.from({ length: rainCount }, () => createRainHeart(true));
+
+      computeTargets();
+    }
+
+    function computeTargets() {
+      const minDim = Math.min(width, height);
+      const heartScale = (minDim / 37) * (width < 500 ? 0.96 : 0.88);
+      const centerX = width / 2;
+      const centerY = height / 2 - minDim * 0.02;
+
+      particles.forEach((p) => {
+        const pt = heartPoint(p.t);
+        p.targetX = centerX + pt.x * heartScale * p.layerScale;
+        p.targetY = centerY + pt.y * heartScale * p.layerScale;
+      });
+    }
+
+    function easeOutQuint(x) {
+      return 1 - Math.pow(1 - x, 5);
+    }
+
+    function showLanguage(lang, text) {
+      langBadge.textContent = `${lang} —${text}`;
+      langBadge.classList.add('visible');
+      clearTimeout(badgeTimer);
+      badgeTimer = setTimeout(() => {
+        langBadge.classList.remove('visible');
+      }, 2600);
+    }
+
+    function spawnBurst(x, y) {
+      for (let i = 0; i < 12; i++) {
+        const angle = (Math.PI * 2 * i) / 12 + Math.random() * 0.3;
+        const speed = 1.4 + Math.random() * 2.6;
+        burstHearts.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 1,
+          size: 8 + Math.random() * 8,
+          alpha: 1,
+          rotation: (Math.random() - 0.5) * 0.6,
+          color: palette[Math.floor(Math.random() * palette.length)]
+        });
+      }
+    }
+
+    function drawMiniHeart(x, y, size, color, alpha, rotation = 0) {
+      ctx.save();
+      ctx.translate(x, y);
+      if (rotation !== 0) ctx.rotate(rotation);
+      ctx.scale(size / 16, size / 16);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(0, 4);
+      ctx.bezierCurveTo(0, -3, -10, -3, -10, 4);
+      ctx.bezierCurveTo(-10, 10, 0, 14, 0, 17);
+      ctx.bezierCurveTo(0, 14, 10, 10, 10, 4);
+      ctx.bezierCurveTo(10, -3, 0, -3, 0, 4);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      ctx.clearRect(0, 0, width, height);
+
+      // 1. Arka plan kalp yağmuru
+      for (let i = 0; i < rainHearts.length; i++) {
+        const h = rainHearts[i];
+        h.y += h.speedY;
+        h.x += Math.sin(now * h.swaySpeed + h.phase) * h.swayAmp;
+        h.rotation += h.rotSpeed;
+
+        if (h.y > height + 25) {
+          rainHearts[i] = createRainHeart(false);
+        } else {
+          drawMiniHeart(h.x, h.y, h.size, h.color, h.alpha, h.rotation);
+        }
+      }
+
+      // 2. Kalp oluştuktan sonra gerçekçi çift kalp atışı ritmi
+      const beatReady = Math.max(0, Math.min(1, (elapsed - 2800) / 1000));
+      const beatTime = elapsed * 0.0033;
+      const pulse =
+        beatReady *
+        (Math.pow(Math.sin(beatTime), 8) * 0.045 +
+          Math.pow(Math.sin(beatTime - 0.35), 8) * 0.025);
+
+      const centerX = width / 2;
+      const centerY = height / 2 - Math.min(width, height) * 0.02;
+      const baseFontSize = Math.max(9.5, Math.min(14.5, Math.min(width, height) * 0.021));
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // 3. Dillerden oluşan ana kalp katmanları
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        const localTime = Math.max(0, elapsed - p.delay);
+        const progress = Math.min(1, localTime / p.duration);
+        const eased = easeOutQuint(progress);
+
+        const curX = p.startX + (p.targetX - p.startX) * eased;
+        const curY = p.startY + (p.targetY - p.startY) * eased;
+
+        const dx = curX - centerX;
+        const dy = curY - centerY;
+        const floatX = Math.cos(now * 0.0015 + p.floatPhase) * 1.8 * progress;
+        const floatY = Math.sin(now * 0.0018 + p.floatPhase) * 1.8 * progress;
+
+        p.x = centerX + dx * (1 + pulse) + floatX;
+        p.y = centerY + dy * (1 + pulse) + floatY;
+
+        const scaleFactor = p.layerIdx === 0 ? 1 : p.layerIdx === 1 ? 0.86 : 0.74;
+        ctx.font = `50
